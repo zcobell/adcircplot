@@ -1,0 +1,22 @@
+contour:
+  filename: fort.63.nc
+  variable: zeta
+  time_index: -1
+
+geometry:
+  projection: Orthographic
+  size: [16, 10]
+  projection_center: [-83, 28]
+  global: true
+
+features:
+  title: 'Contour plot of water level'
+  wms: "satellite"
+
+colorbar:
+  label: "Water level (m)"
+  minimum: 0
+  maximum: 3
+
+output:
+  screen: true

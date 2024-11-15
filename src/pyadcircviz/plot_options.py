@@ -25,19 +25,30 @@ ADCIRC_VIZ_SCHEMA = Schema(
             Optional("title", default=None): str,
         },
         Optional(
-            "geometry", default={"extent": [], "projection": None, "size": [16, 10]}
+            "geometry",
+            default={
+                "extent": [],
+                "projection": None,
+                "projection_center": None,
+                "size": [16, 10],
+                "global": False,
+            },
         ): {
             Optional("extent", default=[]): And(
                 list[Use(float)],
                 lambda extent: len(extent) == 4,
             ),
             Optional("projection", default="PlateCarree"): And(
-                str, lambda s: s in ["PlateCarree", "Robinson"]
+                str, lambda s: s.lower() in ["platecarree", "robinson", "orthographic"]
             ),
             Optional("size", default=[10, 10]): And(
                 list[Use(float)],
                 lambda size: len(size) == 2,
             ),
+            Optional("projection_center", default=None): And(
+                list[Use(float)], lambda center: len(center) == 2
+            ),
+            Optional("global", default=False): bool,
         },
         "colorbar": {
             Optional("label", default=None): str,
@@ -51,7 +62,7 @@ ADCIRC_VIZ_SCHEMA = Schema(
             Optional("colormap", default="jet"): And(str, len),
             Optional("contour_count", default=20): And(int, lambda n: n > 0),
         },
-        Optional("output", default={"filename": "adcircviz.png", "screen": False}): {
+        Optional("output", default={"filename": None, "screen": False}): {
             Optional("filename", default=None): And(str, len),
             Optional("screen", default=False): bool,
         },

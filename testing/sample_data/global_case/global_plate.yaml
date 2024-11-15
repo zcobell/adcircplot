@@ -1,0 +1,21 @@
+contour:
+  filename: fort.63.nc
+  variable: zeta
+  time_index: -1
+
+geometry:
+  projection: PlateCarree
+  extent: [-90, -77.5, 22.5, 34.5]
+  size: [16, 10]
+
+features:
+  title: 'Contour plot of water level'
+  wms: "streets"
+
+colorbar:
+  label: "Water level (m)"
+  minimum: 0
+  maximum: 3
+
+output:
+  screen: true

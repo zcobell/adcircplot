@@ -14,8 +14,9 @@ class AdcircFile:
     def __init__(
         self,
         filename: str,
-        proj_str: str = "PlateCarree",
-        extent: Optional[List[float]] = None,
+        proj_str: str,
+        extent: List[float],
+        projection_center: List[float],
     ):
         """
         Constructor for the AdcircFile class
@@ -26,13 +27,13 @@ class AdcircFile:
             extent: The extent of the plot (xmin, xmax, ymin, ymax) used to mask the data
         """
         self.__filename = filename
-        self.__projection = self.__projection_from_string(proj_str)
+        self.__projection = self.__projection_from_string(proj_str, projection_center)
         self.__adcirc_file = xr.open_dataset(filename)
         self.__mesh = self.__read_mesh()
         self.__triangulation = self.__generate_triangulation(extent)
 
     @staticmethod
-    def __projection_from_string(proj_str) -> ccrs.Projection:
+    def __projection_from_string(proj_str: str, center: List[float]) -> ccrs.Projection:
         """
         Convert a string to a cartopy projection object
 
@@ -42,10 +43,18 @@ class AdcircFile:
         Returns:
             ccrs.Projection: The cartopy projection object
         """
-        if proj_str is None or proj_str == "PlateCarree":
+        proj_str = proj_str.lower()
+        if proj_str is None or proj_str == "platecarree":
             return ccrs.PlateCarree()
-        elif proj_str == "Robinson":
+        elif proj_str == "robinson":
             return ccrs.Robinson()
+        elif proj_str == "orthographic":
+            if center is None:
+                return ccrs.Orthographic()
+            else:
+                return ccrs.Orthographic(
+                    central_longitude=center[0], central_latitude=center[1]
+                )
         else:
             msg = f"Projection {proj_str} not recognized"
             raise ValueError(msg)
@@ -58,6 +67,18 @@ class AdcircFile:
             ccrs.Projection: The cartopy projection object
         """
         return self.__projection
+
+    def n_time_steps(self, variable_name: str) -> int:
+        """
+        Return the number of time steps in the ADCIRC file
+
+        Args:
+            variable_name: The name of the variable
+
+        Returns:
+            int: The number of time steps
+        """
+        return self.__adcirc_file[variable_name].shape[0]
 
     def __read_mesh(self) -> xr.Dataset:
         """
@@ -75,7 +96,10 @@ class AdcircFile:
             }
         )
 
-    def __generate_triangulation(self, extent: List[float]) -> Triangulation:
+    def __generate_triangulation(
+        self,
+        extent: List[float],
+    ) -> Triangulation:
         """
         Generate a matplotlib Triangulation object from the mesh data.
 
@@ -89,12 +113,16 @@ class AdcircFile:
         Returns:
             Triangulation: A matplotlib Triangulation object
         """
-        if self.__projection != ccrs.PlateCarree():
-            return self.__generate_triangulation_global()
-        else:
+        if isinstance(self.__projection, ccrs.PlateCarree):
             return self.__generate_triangulation_plate(extent)
+        elif isinstance(self.__projection, ccrs.Orthographic):
+            return self.__generate_triangulation_orthographic()
+        elif isinstance(self.__projection, ccrs.Robinson):
+            return self.__generate_triangulation_robinson()
+        else:
+            raise ValueError("Projection not recognized")
 
-    def __generate_triangulation_plate(self, extent):
+    def __generate_triangulation_plate(self, extent: List[float]):
         if len(extent) == 4:
             buffer_x = 0.1 * (extent[1] - extent[0])
             buffer_y = 0.1 * (extent[3] - extent[2])
@@ -113,6 +141,7 @@ class AdcircFile:
             )
         else:
             mask = None
+
         return Triangulation(
             self.__mesh["x"],
             self.__mesh["y"],
@@ -120,7 +149,32 @@ class AdcircFile:
             mask=mask,
         )
 
-    def __generate_triangulation_global(self) -> Triangulation:
+    def __generate_triangulation_orthographic(
+        self,
+    ) -> Triangulation:
+        """
+        Generate the triangulation for an orthographic projection
+
+        Returns:
+            Triangulation: The triangulation object
+        """
+        x, y = self.__projection.transform_points(
+            ccrs.PlateCarree(), self.__mesh["x"], self.__mesh["y"]
+        )[:, :2].T
+        self.__mesh["x_pj"] = x
+        self.__mesh["y_pj"] = y
+
+        node_mask = np.isnan(x) | np.isnan(y)
+        mask = np.any(node_mask[self.__mesh["element"] - 1], axis=1)
+
+        return Triangulation(
+            self.__mesh["x_pj"],
+            self.__mesh["y_pj"],
+            self.__mesh["element"] - 1,
+            mask=mask,
+        )
+
+    def __generate_triangulation_robinson(self) -> Triangulation:
         """
         Generate a matplotlib Triangulation object from the mesh data.
 
@@ -135,18 +189,21 @@ class AdcircFile:
         mask = ~np.all(
             np.abs(
                 np.diff(
-                    self.__mesh["x"][self.__mesh["element"] - 1].values,
+                    self.__mesh["x"][self.__mesh["element"] - 1].to_numpy(),
                     axis=1,
                 )
             )
             < 90,
             axis=1,
         )
+
         x, y = self.__projection.transform_points(
             ccrs.PlateCarree(), self.__mesh["x"], self.__mesh["y"]
         )[:, :2].T
+
         self.__mesh["x_pj"] = x
         self.__mesh["y_pj"] = y
+
         return Triangulation(
             self.__mesh["x_pj"],
             self.__mesh["y_pj"],
@@ -183,7 +240,7 @@ class AdcircFile:
 
     def masked_triangulation(self, scalar: xr.DataArray) -> Triangulation:
         """
-        Mask the pre-computed triangulation with a mask.
+        Mask the pre-computed triangulation with a variable
 
         This method will mask the triangulation based on the scalar values in
         addition to the triangle connectivity.
@@ -203,10 +260,10 @@ class AdcircFile:
             mask = np.full(t.triangles.shape[0], False)
 
         # Mask the triangulation based on the existing triangle connectivity mask
-        # and the scalar values
-        mask = mask | np.isnan(np.any(scalar.to_numpy()[t.triangles], axis=1))
+        # and the scalar values that are nan or < -9999
+        new_mask = mask | ~np.isfinite(scalar.to_numpy()[t.triangles].min(axis=1))
 
-        t.set_mask(mask)
+        t.set_mask(new_mask)
 
         return t
 

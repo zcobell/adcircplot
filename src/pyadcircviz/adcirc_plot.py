@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,8 +22,40 @@ class AdcircPlot:
         self.__adcirc = AdcircFile(
             self.__options["contour"]["filename"],
             self.__options["geometry"]["projection"],
-            extent,
+            extent=extent,
+            projection_center=self.__options["geometry"]["projection_center"],
         )
+        self.__figure = None
+        self.__ax = None
+        self.__contour_map = None
+        self.__contour_levels = None
+
+    def figure(self) -> plt.Figure:
+        """
+        Return the figure handle
+
+        Returns:
+            plt.Figure: The figure handle
+        """
+        return self.__figure
+
+    def axes(self) -> plt.Axes:
+        """
+        Return the axes handle
+
+        Returns:
+            plt.Axes: The axes handle
+        """
+        return self.__ax
+
+    def n_time_steps(self) -> int:
+        """
+        Return the number of time steps in the ADCIRC file
+
+        Returns:
+            int: The number of time steps
+        """
+        return self.__adcirc.n_time_steps(self.__options["contour"]["variable"])
 
     def options(self) -> dict:
         """
@@ -41,32 +73,37 @@ class AdcircPlot:
         """
         Plot the mesh z elevation using matplotlib and cartopy as filled contours
         """
-        fig, ax = self.__generate_plot_handles()
-        self.__configure_plot_extents(ax)
-        self.__add_features(ax)
-        self.__plot_contours(ax)
-        self.__plot_mesh(ax)
-        self.__add_map_labels(ax)
-        self.__plot_output()
+        self.__figure, self.__ax = self.__generate_plot_handles()
+        self.__configure_plot_extents()
+        self.__add_features()
+        self.__plot_contours()
+        self.__plot_mesh()
+        self.__add_map_labels()
 
-    def __plot_output(self) -> None:
+    def show(self):
         """
-        Display the plot on the screen or save it to a file
+        Display the plot on the screen
 
         Returns:
             None
         """
-        if self.__options["output"]["screen"]:
-            plt.show()
-        if self.__options["output"]["filename"] is not None:
-            plt.savefig(self.__options["output"]["filename"])
+        plt.show()
 
-    def __plot_contours(self, ax: plt.Axes) -> None:
+    def save(self, filename: str):
         """
-        Plot the filled contours of the mesh and return the map object
+        Save the plot to a file
 
         Args:
-            ax: The matplotlib axes object
+            filename (str): The name of the file to save the plot to
+
+        Returns:
+            None
+        """
+        plt.savefig(filename, tight_layout=True, dpi=300)
+
+    def __plot_contours(self) -> None:
+        """
+        Plot the filled contours of the mesh and return the map object
 
         Returns:
             None
@@ -75,48 +112,33 @@ class AdcircPlot:
             self.__options["contour"]["variable"],
             self.__options["contour"]["time_index"],
         )
-        levels, ticks = self.__configure_colorbar(variable)
-        triangulation = self.__adcirc.masked_triangulation(variable)
+        self.__contour_levels, ticks = self.__configure_colorbar(variable)
+        self.update_array(variable, self.__options["contour"]["time_index"])
+        self.__add_colorbar(ticks)
 
-        contour_map = ax.tricontourf(
-            triangulation,
-            variable * self.__options["contour"]["scale"],
-            cmap=self.__options["colorbar"]["colormap"],
-            extend="both",
-            levels=levels,
-            alpha=self.__options["contour"]["transparency"],
-        )
-
-        self.__add_colorbar(ax, contour_map, ticks)
-
-    def __plot_mesh(self, ax: plt.Axes) -> None:
+    def __plot_mesh(self) -> None:
         """
         Plot the mesh triangles on the map
-
-        Args:
-            ax: The matplotlib axes object
 
         Returns:
             None
         """
         if self.__options["features"]["triangles"]:
-            ax.triplot(self.__adcirc.triangulation(), color="black", alpha=1.0)
+            self.__ax.triplot(self.__adcirc.triangulation(), color="black", alpha=1.0)
 
-    def __add_colorbar(self, ax: plt.Axes, contour_map, ticks: List[float]) -> None:
+    def __add_colorbar(self, ticks: List[float]) -> None:
         """
         Add the colorbar to the plot
 
         Args:
-            ax: The matplotlib axes object
-            contour_map: The contour map object
             ticks: The colorbar ticks
 
         Returns:
             None
         """
         cbar = plt.colorbar(
-            contour_map,
-            ax=ax,
+            self.__contour_map,
+            ax=self.__ax,
             orientation=self.__options["colorbar"]["orientation"],
             ticks=ticks,
             pad=0.1,
@@ -124,41 +146,38 @@ class AdcircPlot:
         if self.__options["colorbar"]["label"] is not None:
             cbar.set_label(self.__options["colorbar"]["label"])
 
-    def __add_map_labels(self, ax: plt.Axes) -> None:
+    def __add_map_labels(self) -> None:
         """
         Add the map labels to the plot
 
-        Args:
-            ax: The matplotlib axes object
-
         Returns:
             None
         """
-        ax.set_xlabel("Longitude")
-        ax.set_ylabel("Latitude")
+        self.__ax.set_xlabel("Longitude")
+        self.__ax.set_ylabel("Latitude")
         if self.__options["features"]["title"] is not None:
-            ax.set_title(self.__options["features"]["title"])
-        ax.gridlines(draw_labels=True)
+            self.__ax.set_title(self.__options["features"]["title"])
+        self.__ax.gridlines(draw_labels=True)
 
-    def __configure_plot_extents(self, ax: plt.Axes) -> None:
+    def __configure_plot_extents(self) -> None:
         """
         Configure the plot extents based on the mesh extents
 
-        Args:
-            ax: The matplotlib axes object
-
         Returns:
             None
         """
-        if len(self.__options["geometry"]["extent"]) == 0:
-            self.__options["geometry"]["extent"] = [
-                float(self.__adcirc.mesh()["x"].min()),
-                float(self.__adcirc.mesh()["x"].max()),
-                float(self.__adcirc.mesh()["y"].min()),
-                float(self.__adcirc.mesh()["y"].max()),
-            ]
-
-        ax.set_extent(self.__options["geometry"]["extent"])
+        if not self.__options["geometry"]["projection"].lower() == "orthographic":
+            if len(self.__options["geometry"]["extent"]) == 0:
+                self.__options["geometry"]["extent"] = [
+                    float(self.__adcirc.mesh()["x"].min()),
+                    float(self.__adcirc.mesh()["x"].max()),
+                    float(self.__adcirc.mesh()["y"].min()),
+                    float(self.__adcirc.mesh()["y"].max()),
+                ]
+            self.__ax.set_extent(self.__options["geometry"]["extent"])
+        elif self.__options["geometry"]["projection"].lower() == "orthographic":
+            if self.__options["geometry"]["global"]:
+                self.__ax.set_global()
 
     def __generate_plot_handles(self) -> Tuple[plt.Figure, plt.Axes]:
         """
@@ -201,12 +220,9 @@ class AdcircPlot:
             levels = self.__options["colorbar"]["ticks"]
         return levels, ticks
 
-    def __add_features(self, ax: plt.Axes) -> None:
+    def __add_features(self) -> None:
         """
         Add the map features to the plot (land, ocean, coastline, borders, lakes, etc.)
-
-        Args:
-            ax: The matplotlib axes object
 
         Returns:
             None
@@ -214,25 +230,22 @@ class AdcircPlot:
         import cartopy.feature as cfeature
 
         if self.__options["features"]["wms"] is not None:
-            self.__add_basemap(ax)
+            self.__add_basemap()
         else:
             if self.__options["features"]["land"]:
-                ax.add_feature(cfeature.LAND)
+                self.__ax.add_feature(cfeature.LAND)
             if self.__options["features"]["ocean"]:
-                ax.add_feature(cfeature.OCEAN)
+                self.__ax.add_feature(cfeature.OCEAN)
             if self.__options["features"]["coastline"]:
-                ax.add_feature(cfeature.COASTLINE)
+                self.__ax.add_feature(cfeature.COASTLINE)
             if self.__options["features"]["borders"]:
-                ax.add_feature(cfeature.BORDERS, linestyle=":")
+                self.__ax.add_feature(cfeature.BORDERS, linestyle=":")
             if self.__options["features"]["lakes"]:
-                ax.add_feature(cfeature.LAKES, alpha=0.5)
+                self.__ax.add_feature(cfeature.LAKES, alpha=0.5)
 
-    def __add_basemap(self, ax: plt.Axes) -> None:
+    def __add_basemap(self) -> None:
         """
         Add a basemap to the plot using contextily
-
-        Args:
-            ax: The matplotlib axes object
 
         Returns:
             None
@@ -241,7 +254,7 @@ class AdcircPlot:
 
         if self.__options["features"]["wms"] == "streets":
             ctx.add_basemap(
-                ax,
+                self.__ax,
                 zoom="auto",
                 crs=self.__adcirc.projection(),
                 source=ctx.providers.Esri.WorldTopoMap,
@@ -249,9 +262,35 @@ class AdcircPlot:
             )
         elif self.__options["features"]["wms"] == "satellite":
             ctx.add_basemap(
-                ax,
+                self.__ax,
                 zoom="auto",
                 crs=self.__adcirc.projection(),
                 source=ctx.providers.Esri.WorldImagery,
                 attribution="Basemap: Esri",
             )
+
+    def update_array(self, var: Union[str, xr.DataArray], time_index: int) -> None:
+        """
+        Update the array to plot
+
+        Args:
+            var (Union[str, xr.DataArray]): The variable to plot
+            time_index (int): The time index to plot
+
+        Returns:
+            None
+        """
+
+        if isinstance(var, xr.DataArray):
+            variable = var
+        else:
+            variable = self.__adcirc.array(var, time_index)
+
+        self.__contour_map = self.__ax.tricontourf(
+            self.__adcirc.masked_triangulation(variable),
+            variable * self.__options["contour"]["scale"],
+            cmap=self.__options["colorbar"]["colormap"],
+            extend="both",
+            levels=self.__contour_levels,
+            alpha=self.__options["contour"]["transparency"],
+        )
