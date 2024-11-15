@@ -114,6 +114,9 @@ class StormTrack:
                         plot_markers,
                         alpha,
                     )
+        else:
+            msg = f"MetGet Storm Track Error: {response.status_code}: {response.text}"
+            raise ValueError(msg)
 
     def __process_storm_track(
         self,

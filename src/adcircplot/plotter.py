@@ -309,7 +309,7 @@ class AdcircPlotter:
                 self.__ax.add_feature(cfeature.BORDERS, linestyle=":")
             if self.__options["features"]["lakes"]:
                 self.__ax.add_feature(
-                    cfeature.GSHHSFeature(levels=[2, 3, 4], scale=resolution),
+                    cfeature.GSHHSFeature(levels=[2, 3, 4, 5, 6], scale=resolution),
                     zorder=0,
                     facecolor=np.array((152, 183, 226)) / 256.0,
                     edgecolor="none",
