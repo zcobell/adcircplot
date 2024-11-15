@@ -291,24 +291,16 @@ class AdcircPlotter:
         """
         import cartopy.feature as cfeature
 
-        # Determine the resolution of the map features. We use the dx of the plot area
-        # to determine the resolution of the map features.
-        if len(self.__options["geometry"]["extent"]) == 0:
-            # Use the mesh extents to determine the resolution of the map features
-            # if the user has not specified the extents
-            dx = self.__adcirc.mesh()["x"].max() - self.__adcirc.mesh()["x"].min()
-        else:
-            dx = (
-                self.__options["geometry"]["extent"][1]
-                - self.__options["geometry"]["extent"][0]
-            )
-
-        if dx < 10.0:
-            resolution = "10m"
-        elif dx < 50.0:
+        resolution = self.__options["features"]["feature_resolution"]
+        if resolution == "low":
+            resolution = "100m"
+        elif resolution == "medium":
             resolution = "50m"
+        elif resolution == "high":
+            resolution = "10m"
         else:
-            resolution = "110m"
+            msg = "Feature resolution must be low, medium, or high"
+            raise ValueError(msg)
 
         if self.__options["features"]["wms"] is not None:
             self.__add_basemap()
