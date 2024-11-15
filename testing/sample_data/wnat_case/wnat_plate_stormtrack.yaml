@@ -5,15 +5,20 @@ contour:
   transparency: 1.0
 
 geometry:
-  extent: [-90, -77.5, 22.5, 34.5]
+  extent: [-100, -65.5, 10.5, 40.5]
 
 features:
   title: 'Contour plot of water level'
-#  wms: "satellite"
+  storm_track:
+    source:
+      geojson:
+        - file: storm_track.json
+          markers: True
+          alpha: 1.0
 
 colorbar:
   label: "Water level (m)"
-  minimum: 0
+  minimum: -2
   maximum: 3
   contour_count: 200
 

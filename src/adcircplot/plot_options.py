@@ -1,10 +1,43 @@
+from email.policy import default
+
 import yaml
+import os
+
 from schema import And, Optional, Or, Schema, Use
+from datetime import datetime
 
 """
 Schema for the input file
 """
-ADCIRC_VIZ_SCHEMA = Schema(
+METGET_TRACK_SCHEMA = Schema(
+    [
+        {
+            "model": And(str, lambda s: s.upper()),
+            "storm": int,
+            "cycle": Use(datetime.fromisoformat),
+            Optional("basin", default="AL"): And(str, lambda s: s.upper()),
+            Optional("markers", default=True): bool,
+            Optional("color", default="black"): str,
+            Optional("width", default=1.0): Use(float),
+            Optional("alpha", default=1.0): And(Use(float), lambda a: 0.0 <= a <= 1.0),
+        }
+    ]
+)
+
+GEOJSON_TRACK_SCHEMA = Schema(
+    [
+        {
+            "file": And(str, os.path.exists),
+            Optional("markers", default=True): bool,
+            Optional("color", default="black"): str,
+            Optional("width", default=1.0): Use(float),
+            Optional("alpha", default=1.0): And(Use(float), lambda a: 0.0 <= a <= 1.0),
+        }
+    ]
+)
+
+
+ADCIRC_PLOT_SCHEMA = Schema(
     {
         "contour": {
             "filename": And(str, len),
@@ -23,12 +56,18 @@ ADCIRC_VIZ_SCHEMA = Schema(
             Optional("borders", default=True): bool,
             Optional("lakes", default=True): bool,
             Optional("title", default=None): str,
+            Optional("storm_track", default=None): {
+                "source": {
+                    Optional("geojson", default=None): GEOJSON_TRACK_SCHEMA,
+                    Optional("metget", default=None): METGET_TRACK_SCHEMA,
+                },
+            },
         },
         Optional(
             "geometry",
             default={
                 "extent": [],
-                "projection": None,
+                "projection": "PlateCarree",
                 "projection_center": None,
                 "size": [16, 10],
                 "global": False,
@@ -41,7 +80,7 @@ ADCIRC_VIZ_SCHEMA = Schema(
             Optional("projection", default="PlateCarree"): And(
                 str, lambda s: s.lower() in ["platecarree", "robinson", "orthographic"]
             ),
-            Optional("size", default=[10, 10]): And(
+            Optional("size", default=[16, 10]): And(
                 list[Use(float)],
                 lambda size: len(size) == 2,
             ),
@@ -82,4 +121,4 @@ def read_input_file(filename: str) -> dict:
     """
     with open(filename) as file:
         data = yaml.safe_load(file)
-    return ADCIRC_VIZ_SCHEMA.validate(data)
+    return ADCIRC_PLOT_SCHEMA.validate(data)

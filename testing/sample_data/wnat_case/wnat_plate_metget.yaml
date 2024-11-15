@@ -1,0 +1,37 @@
+contour:
+  filename: wnat.63.nc
+  variable: zeta
+  time_index: -1
+  transparency: 1.0
+
+geometry:
+  extent: [-100, -65.5, 10.5, 40.5]
+
+features:
+  title: 'Contour plot of water level'
+  storm_track:
+      metget:
+        - model: all
+          cycle: "2024-11-06 06:00"
+          storm: 18
+          basin: "AL"
+          markers: false
+          alpha: 0.25
+          color: gray
+        - model: AVNO
+          cycle: "2024-11-06 06:00"
+          storm: 18
+          basin: "AL"
+          markers: false
+          alpha: 1.0
+          width: 3
+          color: red
+
+colorbar:
+  label: "Water level (m)"
+  minimum: -2
+  maximum: 3
+  contour_count: 200
+
+output:
+    screen: true
