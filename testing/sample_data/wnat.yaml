@@ -1,0 +1,21 @@
+contour:
+  filename: wnat.63.nc
+  variable: zeta
+  time_index: -1
+  transparency: 1.0
+
+geometry:
+  extent: [-90, -77.5, 22.5, 34.5]
+
+features:
+  title: 'Contour plot of water level'
+#  wms: "satellite"
+
+colorbar:
+  label: "Water level (m)"
+  minimum: 0
+  maximum: 3
+  contour_count: 200
+
+output:
+    screen: true
