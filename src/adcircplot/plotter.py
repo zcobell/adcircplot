@@ -306,13 +306,25 @@ class AdcircPlotter:
                     cfeature.GSHHSFeature(levels=[1], scale=resolution)
                 )
             if self.__options["features"]["borders"]:
-                self.__ax.add_feature(cfeature.BORDERS, linestyle=":")
+                self.__ax.add_feature(cfeature.BORDERS, linestyle=":", linewidth=0.75)
+                self.__ax.add_feature(
+                    cfeature.NaturalEarthFeature(
+                        category="cultural",
+                        name="admin_1_states_provinces_lines",
+                        facecolor="none",
+                        scale="10m",
+                        edgecolor="black",
+                        linewidth=0.5,
+                        linestyle=":",
+                    )
+                )
             if self.__options["features"]["lakes"]:
                 self.__ax.add_feature(
                     cfeature.GSHHSFeature(levels=[2, 3, 4, 5, 6], scale=resolution),
                     zorder=0,
                     facecolor=np.array((152, 183, 226)) / 256.0,
-                    edgecolor="none",
+                    edgecolor="black",
+                    linewidth=0.5,
                 )
 
         if self.__options["features"]["storm_track"] is not None:
