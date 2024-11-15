@@ -28,6 +28,7 @@ dependencies = [
     "contextily",
     "pyyaml",
     "schema",
+    "requests",
 ]
 
 [project.urls]
