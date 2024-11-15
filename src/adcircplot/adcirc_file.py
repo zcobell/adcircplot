@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 import cartopy.crs as ccrs
 import numpy as np

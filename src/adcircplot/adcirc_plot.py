@@ -1,19 +1,21 @@
 import argparse
 
-from .adcirc_plot import AdcircPlot
+from .plotter import AdcircPlotter
 from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 
 
-def adcirc_viz() -> None:
+def adcirc_plot() -> None:
     parser = argparse.ArgumentParser(description="Plot ADCIRC data")
     parser.add_argument("filename", type=str, help="The name of the yaml options file")
     parser.add_argument("--animate", action="store_true", help="Animate the plot")
-    parser.add_argument("--slider", action="store_true", help="Add an animation slider to the plot")
+    parser.add_argument(
+        "--slider", action="store_true", help="Add an animation slider to the plot"
+    )
     args = parser.parse_args()
 
-    plotter = AdcircPlot(args.filename)
+    plotter = AdcircPlotter(args.filename)
     plotter.plot()
 
     def update_plot(t):
@@ -43,4 +45,4 @@ def adcirc_viz() -> None:
 
 
 if __name__ == "__main__":
-    adcirc_viz()
+    adcirc_plot()

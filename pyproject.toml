@@ -1,5 +1,5 @@
 [project]
-name = "pyadcircviz"
+name = "adcircplot"
 version = "0.0.0"
 description = "A client package for plotting ADCIRC models"
 authors = [
@@ -46,7 +46,7 @@ where = [ "src" ]
 version = { attr = "pyadcircviz.__version__" }
 
 [project.scripts]
-adcircviz = "pyadcircviz:adcircviz.adcirc_viz"
+adcircplot = "adcircplot:adcirc_plot.adcirc_plot"
 
 [tool.bumpver]
 current_version = "0.0.0"
@@ -61,7 +61,7 @@ push = false
     'current_version = "{version}"',
     'version = "{version}"',
 ]
-"src/pyadcircviz/__init__.py" = [
+"src/adcircplot/__init__.py" = [
     '__version__ = "{version}"',
 ]
 

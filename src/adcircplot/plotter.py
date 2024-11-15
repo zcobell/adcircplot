@@ -8,7 +8,7 @@ from .adcirc_file import AdcircFile
 from .plot_options import read_input_file
 
 
-class AdcircPlot:
+class AdcircPlotter:
     def __init__(self, configuration_file: str):
         """
         Constructor for the AdcircPlot class
@@ -283,8 +283,10 @@ class AdcircPlot:
 
         if isinstance(var, xr.DataArray):
             variable = var
-        else:
+        elif isinstance(var, str):
             variable = self.__adcirc.array(var, time_index)
+        else:
+            raise ValueError("Variable must be a string or xarray.DataArray")
 
         self.__contour_map = self.__ax.tricontourf(
             self.__adcirc.masked_triangulation(variable),
