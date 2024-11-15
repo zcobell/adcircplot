@@ -53,6 +53,11 @@ ADCIRC_PLOT_SCHEMA = Schema(
             Optional("coastline", default=True): bool,
             Optional("borders", default=True): bool,
             Optional("lakes", default=True): bool,
+            Optional("resolution", default="auto"): And(
+                str,
+                lambda s: s.lower()
+                in ["auto", "coarse", "low", "medium", "high", "full"],
+            ),
             Optional("title", default=None): str,
             Optional("grid", default=True): bool,
             Optional("storm_track", default=None): {

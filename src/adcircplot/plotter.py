@@ -292,6 +292,8 @@ class AdcircPlotter:
         """
         import cartopy.feature as cfeature
 
+        resolution = self.__options["features"]["resolution"]
+
         if self.__options["features"]["wms"] is not None:
             self.__add_basemap()
         else:
@@ -300,12 +302,14 @@ class AdcircPlotter:
             if self.__options["features"]["ocean"]:
                 self.__ax.add_feature(cfeature.OCEAN)
             if self.__options["features"]["coastline"]:
-                self.__ax.add_feature(cfeature.GSHHSFeature(levels=[1]))
+                self.__ax.add_feature(
+                    cfeature.GSHHSFeature(levels=[1], scale=resolution)
+                )
             if self.__options["features"]["borders"]:
                 self.__ax.add_feature(cfeature.BORDERS, linestyle=":")
             if self.__options["features"]["lakes"]:
                 self.__ax.add_feature(
-                    cfeature.GSHHSFeature(levels=[2, 3, 4]),
+                    cfeature.GSHHSFeature(levels=[2, 3, 4], scale=resolution),
                     zorder=0,
                     facecolor=np.array((152, 183, 226)) / 256.0,
                     edgecolor="none",
