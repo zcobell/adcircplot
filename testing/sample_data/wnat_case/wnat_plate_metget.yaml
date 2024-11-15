@@ -10,6 +10,7 @@ geometry:
 features:
   title: 'Contour plot of water level'
   storm_track:
+    source:
       metget:
         - model: all
           cycle: "2024-11-06 06:00"
@@ -32,6 +33,3 @@ colorbar:
   minimum: -2
   maximum: 3
   contour_count: 200
-
-output:
-    screen: true

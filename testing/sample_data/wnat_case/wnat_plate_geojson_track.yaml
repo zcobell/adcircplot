@@ -23,4 +23,6 @@ colorbar:
   contour_count: 200
 
 output:
-    screen: true
+  filename: wnat_plate_geojson_track.png
+#  width: 12
+#  height: 8

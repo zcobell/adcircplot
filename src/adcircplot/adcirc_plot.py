@@ -1,14 +1,20 @@
 import argparse
 
-from .plotter import AdcircPlotter
-from matplotlib.widgets import Slider
-from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from matplotlib.widgets import Slider
+
+from .plotter import AdcircPlotter
 
 
 def adcirc_plot() -> None:
     parser = argparse.ArgumentParser(description="Plot ADCIRC data")
     parser.add_argument("filename", type=str, help="The name of the yaml options file")
+    parser.add_argument(
+        "--screen",
+        action="store_true",
+        help="Display the plot on screen after plotting",
+    )
     parser.add_argument("--animate", action="store_true", help="Animate the plot")
     parser.add_argument(
         "--slider", action="store_true", help="Add an animation slider to the plot"
@@ -29,7 +35,7 @@ def adcirc_plot() -> None:
         slider.on_changed(update_plot)
         plotter.show()
     elif args.animate:
-        anim = FuncAnimation(
+        anim = FuncAnimation(  # noqa: F841
             plotter.figure(),
             update_plot,
             frames=plotter.n_time_steps(),
@@ -37,11 +43,11 @@ def adcirc_plot() -> None:
         )
         plotter.show()
     else:
-        if plotter.options()["output"]["screen"]:
-            plotter.show()
-
         if plotter.options()["output"]["filename"] is not None:
             plotter.save(plotter.options()["output"]["filename"])
+
+        if args.screen:
+            plotter.show()
 
 
 if __name__ == "__main__":

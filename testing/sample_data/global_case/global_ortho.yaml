@@ -5,7 +5,6 @@ contour:
 
 geometry:
   projection: Orthographic
-  size: [16, 10]
   projection_center: [-83, 28]
   global: true
 
@@ -17,6 +16,3 @@ colorbar:
   label: "Water level (m)"
   minimum: 0
   maximum: 3
-
-output:
-  screen: true

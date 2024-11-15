@@ -6,7 +6,6 @@ contour:
 geometry:
   projection: PlateCarree
   extent: [-90, -77.5, 22.5, 34.5]
-  size: [16, 10]
 
 features:
   title: 'Contour plot of water level'
@@ -16,6 +15,3 @@ colorbar:
   label: "Water level (m)"
   minimum: 0
   maximum: 3
-
-output:
-  screen: true

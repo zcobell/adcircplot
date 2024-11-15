@@ -120,7 +120,8 @@ class AdcircFile:
         elif isinstance(self.__projection, ccrs.Robinson):
             return self.__generate_triangulation_robinson()
         else:
-            raise ValueError("Projection not recognized")
+            msg = "Projection not recognized"
+            raise ValueError(msg)
 
     def __generate_triangulation_plate(self, extent: List[float]):
         if len(extent) == 4:

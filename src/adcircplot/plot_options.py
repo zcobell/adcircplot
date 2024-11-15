@@ -1,10 +1,8 @@
-from email.policy import default
+import os
+from datetime import datetime
 
 import yaml
-import os
-
 from schema import And, Optional, Or, Schema, Use
-from datetime import datetime
 
 """
 Schema for the input file
@@ -80,10 +78,6 @@ ADCIRC_PLOT_SCHEMA = Schema(
             Optional("projection", default="PlateCarree"): And(
                 str, lambda s: s.lower() in ["platecarree", "robinson", "orthographic"]
             ),
-            Optional("size", default=[16, 10]): And(
-                list[Use(float)],
-                lambda size: len(size) == 2,
-            ),
             Optional("projection_center", default=None): And(
                 list[Use(float)], lambda center: len(center) == 2
             ),
@@ -101,9 +95,11 @@ ADCIRC_PLOT_SCHEMA = Schema(
             Optional("colormap", default="jet"): And(str, len),
             Optional("contour_count", default=20): And(int, lambda n: n > 0),
         },
-        Optional("output", default={"filename": None, "screen": False}): {
+        Optional("output", default={"filename": None, "width": None, "height": None}): {
             Optional("filename", default=None): And(str, len),
-            Optional("screen", default=False): bool,
+            Optional("dpi", default=300): And(int, lambda n: n > 0),
+            Optional("width", default=None): And(int, lambda n: n > 0),
+            Optional("height", default=None): And(int, lambda n: n > 0),
         },
     }
 )

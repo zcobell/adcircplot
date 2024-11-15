@@ -5,7 +5,6 @@ contour:
 
 geometry:
   projection: Robinson
-  size: [16, 10]
 
 features:
   title: 'Contour plot of water level'
@@ -15,6 +14,3 @@ colorbar:
   label: "Water level (m)"
   minimum: 0
   maximum: 3
-
-output:
-  screen: true
