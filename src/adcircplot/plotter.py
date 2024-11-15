@@ -3,6 +3,7 @@ from typing import List, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from cartopy.feature import GSHHSFeature
 
 from .adcirc_file import AdcircFile
 from .plot_options import read_input_file
@@ -291,34 +292,23 @@ class AdcircPlotter:
         """
         import cartopy.feature as cfeature
 
-        resolution = self.__options["features"]["feature_resolution"]
-        if resolution == "low":
-            resolution = "100m"
-        elif resolution == "medium":
-            resolution = "50m"
-        elif resolution == "high":
-            resolution = "10m"
-        else:
-            msg = "Feature resolution must be low, medium, or high"
-            raise ValueError(msg)
-
         if self.__options["features"]["wms"] is not None:
             self.__add_basemap()
         else:
             if self.__options["features"]["land"]:
-                self.__ax.add_feature(cfeature.LAND.with_scale(resolution))
+                self.__ax.add_feature(cfeature.LAND)
             if self.__options["features"]["ocean"]:
-                self.__ax.add_feature(cfeature.OCEAN.with_scale(resolution))
+                self.__ax.add_feature(cfeature.OCEAN)
             if self.__options["features"]["coastline"]:
-                self.__ax.add_feature(cfeature.COASTLINE.with_scale(resolution))
+                self.__ax.add_feature(cfeature.GSHHSFeature(levels=[1]))
             if self.__options["features"]["borders"]:
-                self.__ax.add_feature(
-                    cfeature.BORDERS.with_scale(resolution), linestyle=":"
-                )
+                self.__ax.add_feature(cfeature.BORDERS, linestyle=":")
             if self.__options["features"]["lakes"]:
                 self.__ax.add_feature(
-                    cfeature.LAKES.with_scale(resolution),
+                    cfeature.GSHHSFeature(levels=[2, 3, 4]),
                     zorder=0,
+                    facecolor=np.array((152, 183, 226)) / 256.0,
+                    edgecolor="none",
                 )
 
         if self.__options["features"]["storm_track"] is not None:
