@@ -164,7 +164,11 @@ class AdcircPlotter:
         self.__ax.set_ylabel("Latitude")
         if self.__options["features"]["title"] is not None:
             self.__ax.set_title(self.__options["features"]["title"])
-        self.__ax.gridlines(draw_labels=True)
+
+        gl = self.__ax.gridlines(draw_labels=True)
+        if not self.__options["features"]["grid"]:
+            gl.xlines = False
+            gl.ylines = False
 
     def __configure_plot_extents(self) -> None:
         """
@@ -287,19 +291,43 @@ class AdcircPlotter:
         """
         import cartopy.feature as cfeature
 
+        # Determine the resolution of the map features. We use the dx of the plot area
+        # to determine the resolution of the map features.
+        if len(self.__options["geometry"]["extent"]) == 0:
+            # Use the mesh extents to determine the resolution of the map features
+            # if the user has not specified the extents
+            dx = self.__adcirc.mesh()["x"].max() - self.__adcirc.mesh()["x"].min()
+        else:
+            dx = (
+                self.__options["geometry"]["extent"][1]
+                - self.__options["geometry"]["extent"][0]
+            )
+
+        if dx < 10.0:
+            resolution = "10m"
+        elif dx < 50.0:
+            resolution = "50m"
+        else:
+            resolution = "110m"
+
         if self.__options["features"]["wms"] is not None:
             self.__add_basemap()
         else:
             if self.__options["features"]["land"]:
-                self.__ax.add_feature(cfeature.LAND)
+                self.__ax.add_feature(cfeature.LAND.with_scale(resolution))
             if self.__options["features"]["ocean"]:
-                self.__ax.add_feature(cfeature.OCEAN)
+                self.__ax.add_feature(cfeature.OCEAN.with_scale(resolution))
             if self.__options["features"]["coastline"]:
-                self.__ax.add_feature(cfeature.COASTLINE)
+                self.__ax.add_feature(cfeature.COASTLINE.with_scale(resolution))
             if self.__options["features"]["borders"]:
-                self.__ax.add_feature(cfeature.BORDERS, linestyle=":")
+                self.__ax.add_feature(
+                    cfeature.BORDERS.with_scale(resolution), linestyle=":"
+                )
             if self.__options["features"]["lakes"]:
-                self.__ax.add_feature(cfeature.LAKES, alpha=0.5)
+                self.__ax.add_feature(
+                    cfeature.LAKES.with_scale(resolution),
+                    zorder=0,
+                )
 
         if self.__options["features"]["storm_track"] is not None:
             track_plotter = StormTrack(

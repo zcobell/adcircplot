@@ -54,6 +54,7 @@ ADCIRC_PLOT_SCHEMA = Schema(
             Optional("borders", default=True): bool,
             Optional("lakes", default=True): bool,
             Optional("title", default=None): str,
+            Optional("grid", default=True): bool,
             Optional("storm_track", default=None): {
                 "source": {
                     Optional("geojson", default=None): GEOJSON_TRACK_SCHEMA,
