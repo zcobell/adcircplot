@@ -11,7 +11,7 @@ METGET_TRACK_SCHEMA = Schema(
     [
         {
             "model": And(str, lambda s: s.upper()),
-            "storm": int,
+            "storm": Use(int),
             "cycle": Use(datetime.fromisoformat),
             Optional("basin", default="AL"): And(str, lambda s: s.upper()),
             Optional("markers", default=True): bool,

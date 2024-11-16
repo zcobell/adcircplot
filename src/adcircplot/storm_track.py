@@ -271,8 +271,8 @@ class StormTrack:
         H1: yellow
         H2: orange
         H3: red
-        H4: pink
-        H5: magenta
+        H4: magenta
+        H5: pink
 
         Args:
             storm_class (str): The storm class
@@ -286,8 +286,8 @@ class StormTrack:
             "1": "yellow",
             "2": "orange",
             "3": "red",
-            "4": "pink",
-            "5": "magenta",
+            "4": "magenta",
+            "5": "pink",
         }
         if storm_class in storm_class_dict:
             return storm_class_dict[storm_class]
