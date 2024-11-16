@@ -70,6 +70,7 @@ class StormTrack:
         """
         import os
 
+        import warnings
         import requests
 
         if "METGET_API_KEY" not in os.environ:
@@ -116,7 +117,7 @@ class StormTrack:
                     )
         else:
             msg = f"MetGet Storm Track Error: {response.status_code}: {response.text}"
-            raise ValueError(msg)
+            warnings.warn(msg)
 
     def __process_storm_track(
         self,
