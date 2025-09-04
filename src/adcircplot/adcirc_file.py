@@ -78,7 +78,11 @@ class AdcircFile:
         Returns:
             int: The number of time steps
         """
-        return self.__adcirc_file[variable_name].shape[0]
+        if variable_name == "wind_speed":
+            vname = "windx"
+        else:
+            vname = variable_name
+        return self.__adcirc_file[vname].shape[0]
 
     def __read_mesh(self) -> xr.Dataset:
         """
@@ -279,11 +283,16 @@ class AdcircFile:
         Returns:
             xr.DataArray: The data array for the variable at the given time index
         """
-        if variable_name not in self.__adcirc_file:
-            msg = f"Variable {variable_name} not found in the file"
-            raise ValueError(msg)
+        if variable_name == "wind_speed":
+            arr_1 = self.array("windx", time_index)
+            arr_2 = self.array("windy", time_index)
+            return (arr_1**2 + arr_2**2)**(0.5)
+        else:    
+            if variable_name not in self.__adcirc_file:
+                msg = f"Variable {variable_name} not found in the file"
+                raise ValueError(msg)
 
-        if len(self.__adcirc_file[variable_name].shape) == 1:
-            return self.__adcirc_file[variable_name][:]
-        else:
-            return self.__adcirc_file[variable_name][time_index, :]
+            if len(self.__adcirc_file[variable_name].shape) == 1:
+                return self.__adcirc_file[variable_name][:]
+            else:
+                return self.__adcirc_file[variable_name][time_index, :]
