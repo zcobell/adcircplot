@@ -48,11 +48,11 @@ ADCIRC_PLOT_SCHEMA = Schema(
             Optional("triangles", default=False): bool,
             Optional("colorbar", default=True): bool,
             Optional("wms", default=None): str,
-            Optional("land", default=True): bool,
-            Optional("ocean", default=True): bool,
-            Optional("coastline", default=True): bool,
-            Optional("borders", default=True): bool,
-            Optional("lakes", default=True): bool,
+            Optional("land", default=False): bool,
+            Optional("ocean", default=False): bool,
+            Optional("coastline", default=False): bool,
+            Optional("borders", default=False): bool,
+            Optional("lakes", default=False): bool,
             Optional("resolution", default="auto"): And(
                 str,
                 lambda s: s.lower()
